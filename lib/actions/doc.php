@@ -5,8 +5,8 @@ class DocAction
 
     function edit_method()
     {
-        $coll = MongoAdmin::db()->selectCollection($_GET['coll']);
-        $cur  = $coll->find(array('_id' => $_GET['doc']));
+        $coll = MongoAdmin::db()->selectCollection($_REQUEST['coll']);
+        $cur  = $coll->find(array('_id' => $_REQUEST['doc']));
         $doc  = $cur->getNext();
         
         $vars['current_coll'] = $coll;
@@ -17,20 +17,27 @@ class DocAction
 
     function update_method()
     {
-        $json = trim($_POST['json']);
+        $json = trim($_REQUEST['json']);
         $vars = eval("return {$json};");
         
-        $coll = MongoAdmin::db()->selectCollection($_POST['coll']);
-        $coll->update(array('_id' => $_POST['doc']), $vars);
+        $coll = MongoAdmin::db()->selectCollection($_REQUEST['coll']);
+        $coll->update(array('_id' => $_REQUEST['doc']), $vars);
 
-        redirect(url('doc.edit', array('coll' => $coll->getName(), 'doc' => $_POST['doc'])));
+        redirect(url('doc.edit', array('coll' => $coll->getName(), 'doc' => $_REQUEST['doc'])));
+    }
+
+    function drop_method()
+    {
+        $coll = MongoAdmin::db()->selectCollection($_REQUEST['coll']);
+        $coll->remove(array('_id' => $_REQUEST['doc']));
+        redirect(url('default.index', array('coll' => $coll->getName())));
     }
 
     function _fetch_arr()
     {
         $arr = array();
-        print_r($_POST);
-        foreach ($_POST as $key => $value)
+        print_r($_REQUEST);
+        foreach ($_REQUEST as $key => $value)
         {
             $keys = explode('/', $key);
             if ($keys[0] != 'field') continue;
