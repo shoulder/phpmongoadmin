@@ -1,49 +1,3 @@
-<?php
-
-function dump_doc($doc, $parent = 'field/')
-{
-	echo <<<EOT
-<table width="100%" border="1" cellspacing="2" cellpadding="2">
-
-EOT;
-	$fields = array_keys($doc);
-	foreach ($fields as $field):
-		$field_t = h("{$parent}{$field}");
-		$field_name = h($field);
-		echo <<<EOT
-<tr>
-<th scope="row">{$field_name}</th>
-<td>
-
-EOT;
-
-		if (is_array($doc[$field]))
-		{
-			echo dump_doc($doc[$field], "{$parent}{$field}/");
-		}
-		else
-		{
-			$value_t = h($doc[$field]);
-			echo <<<EOT
-<input type="text" name="{$field_t}" id="{$field_t}" size="40" value="{$value_t}" />
-EOT;
-		}
-		
-		echo <<<EOT
-</td>
-</tr>
-
-EOT;
-	endforeach;
-	
-	echo <<<EOT
-</table>
-
-EOT;
-
-}
-
-?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -58,6 +12,123 @@ EOT;
 /* 上面的专用 zoom 属性为 IE 提供避免错误所需的 hasLayout */
 </style>
 <![endif]-->
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js"></script>
+<script language="javascript" type="text/javascript">
+// http://joncom.be/code/javascript-json-formatter/
+
+function FormatJSON(oData, sIndent)
+{
+  if (arguments.length < 2) {
+    var sIndent = "";
+  }
+  var sIndentStyle = "    ";
+  var sDataType = RealTypeOf(oData);
+
+  // open object
+  if (sDataType == "array") {
+    if (oData.length == 0) {
+      return "[]";
+    }
+    var sHTML = "[";
+  } else {
+    var iCount = 0;
+    $.each(oData, function() {
+      iCount++;
+      return;
+    });
+    if (iCount == 0) { // object is empty
+      return "{}";
+    }
+    var sHTML = "{";
+  }
+
+  // loop through items
+  var iCount = 0;
+  $.each(oData, function(sKey, vValue) {
+    if (iCount > 0) {
+      sHTML += ",";
+    }
+    if (sDataType == "array") {
+      sHTML += ("\n" + sIndent + sIndentStyle);
+    } else {
+      sHTML += ("\n" + sIndent + sIndentStyle + "\"" + sKey + "\"" + ": ");
+    }
+
+    // display relevant data type
+    switch (RealTypeOf(vValue)) {
+      case "array":
+      case "object":
+        sHTML += FormatJSON(vValue, (sIndent + sIndentStyle));
+        break;
+      case "boolean":
+      case "number":
+        sHTML += vValue.toString();
+        break;
+      case "null":
+        sHTML += "null";
+        break;
+      case "string":
+        sHTML += ("\"" + vValue + "\"");
+        break;
+      default:
+        sHTML += ("TYPEOF: " + typeof(vValue));                                                                                              }
+        // loop
+        iCount++;
+    }
+  )
+
+  // close object
+  if (sDataType == "array") {
+    sHTML += ("\n" + sIndent + "]");
+  } else {
+    sHTML += ("\n" + sIndent + "}");
+  }
+
+  // return
+  return sHTML;
+}
+
+function RealTypeOf(v)
+{
+  if (typeof(v) == "object") {
+    if (v === null) return "null";
+    if (v.constructor == (new Array).constructor) return "array";
+    if (v.constructor == (new Date).constructor) return "date";
+    if (v.constructor == (new RegExp).constructor) return "regex";
+    return "object";
+  }
+  return typeof(v);
+}
+
+function SortObject(oData)
+{
+  var oNewData = {};
+  var aSortArray = [];
+
+  // sort keys
+  $.each(oData, function(sKey) {
+    aSortArray.push(sKey);
+  });
+  aSortArray.sort(SortLowerCase);
+
+  // create new data object
+  $.each(aSortArray, function(i) {
+    if( RealTypeOf(oData[(aSortArray[i])]) == "object" ) {
+      oData[(aSortArray[i])] = SortObject(oData[(aSortArray[i])]);
+    }
+    oNewData[(aSortArray[i])] = oData[(aSortArray[i])];
+  });
+
+  return oNewData;
+
+  function SortLowerCase(a,b) {
+    a = a.toLowerCase();
+    b = b.toLowerCase();
+    return ((a < b) ? -1 : ((a > b) ? 1 : 0));
+  }
+}
+
+</script>
 </head>
 <body class="twoColElsLtHdr">
 <div id="container">
@@ -79,7 +150,7 @@ EOT;
     <form id="form1" name="form1" method="post" action="<?php echo url('doc.update'); ?>">
     <?php // dump_doc($doc); ?>
     <label for="json">JSON:</label>
-    <textarea name="json" id="json" cols="70" rows="20"><?php echo h(var_export($doc, true)); // echo json_encode($doc); ?></textarea>
+    <textarea name="json" id="json" cols="70" rows="20"></textarea>
     <p>&nbsp;</p>
     <p><input type="submit" name="Submit" value="update" />
     <input type="hidden" name="coll" id="coll" value="<?php echo h($current_coll->getName()); ?>" />
@@ -96,5 +167,10 @@ EOT;
   </div>
   <!-- end #container -->
 </div>
+<script language="javascript" type="text/javascript">
+// http://joncom.be/code/javascript-json-formatter/
+var json_data = <?php echo json_encode($doc); ?>;
+document.getElementById("json").value = FormatJSON(json_data);
+</script>
 </body>
 </html>

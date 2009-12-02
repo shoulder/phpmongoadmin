@@ -18,11 +18,9 @@ class DocAction
     function update_method()
     {
         $json = trim($_REQUEST['json']);
-        $vars = eval("return {$json};");
-        
+        $vars = json_decode($json, true);
         $coll = MongoAdmin::db()->selectCollection($_REQUEST['coll']);
         $coll->update(array('_id' => $_REQUEST['doc']), $vars);
-
         redirect(url('doc.edit', array('coll' => $coll->getName(), 'doc' => $_REQUEST['doc'])));
     }
 
