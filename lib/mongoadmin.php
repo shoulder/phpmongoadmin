@@ -4,6 +4,7 @@ class MongoAdmin
 {
     static public $_config = array();
     static public $_db;
+    static public $root_path;
 
     static function loadConfig($config_filename)
     {
@@ -119,6 +120,8 @@ function redirect($url)
     exit;
 }
 
+
+MongoAdmin::$root_path = dirname(__FILE__);
 
 // 禁止 magic quotes
 if (phpversion() < '5.3')
