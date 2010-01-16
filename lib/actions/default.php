@@ -17,12 +17,14 @@ class DefaultAction
             {
                 $skip = 0;
             }
-            $cur->skip($skip)->limit(30);
+            if ($skip < 0) $skip = 0;
+            $limit = 20;
+            $cur->skip($skip)->limit($limit);
 
             $vars['current_coll'] = $coll;
             $vars['cur'] = $cur;
             $vars['skip'] = $skip;
-            $vars['limit'] = 30;
+            $vars['limit'] = $limit;
         }
         MongoAdmin::tpl('index', $vars);
     }
